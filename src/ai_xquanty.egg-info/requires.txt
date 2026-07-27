@@ -1,6 +1,0 @@
-numpy<3.0,>=2.0
-pandas<3.0,>=2.2
-pyarrow<19,>=17
-
-[dev]
-pytest<9.0,>=8.3
