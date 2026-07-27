@@ -15,3 +15,5 @@ __pycache__/
 coverage.xml
 .coverage
 htmlcov/
+.worktrees/
+.superpowers/
