@@ -1,3 +1,5 @@
+import math
+
 from ai_xquanty.domain.models import PositionSnapshot, TargetPortfolio
 
 
@@ -19,7 +21,8 @@ def apply_risk_rules(
         for symbol, weight in target.weights.items()
         if symbol != "CASH"
     }
-    max_non_cash_weight = 1.0 - min_cash_weight
+    required_cash_weight = math.ceil(min_cash_weight * 1_000_000) / 1_000_000
+    max_non_cash_weight = 1.0 - required_cash_weight
     total_non_cash_weight = sum(clamped.values())
     if total_non_cash_weight > max_non_cash_weight and total_non_cash_weight > 0:
         scale = max_non_cash_weight / total_non_cash_weight
