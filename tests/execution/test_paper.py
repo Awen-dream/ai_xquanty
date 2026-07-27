@@ -1,6 +1,8 @@
+from dataclasses import replace
+
 import pandas as pd
 
-from ai_xquanty.domain.models import PositionSnapshot, TargetPortfolio
+from ai_xquanty.domain.models import MarketDataBundle, PositionSnapshot, TargetPortfolio
 from ai_xquanty.execution.paper import build_order_intents, simulate_next_day_fills
 
 
@@ -180,6 +182,37 @@ def test_simulate_next_day_fills_rejects_infinite_open_price(sample_bundle) -> N
     fills = simulate_next_day_fills(
         intents,
         sample_bundle,
+        trade_date=pd.Timestamp("2024-01-05"),
+        commission_rate=0.0003,
+        stamp_duty_rate=0.001,
+        transfer_fee_rate=0.00001,
+        slippage_bps=5.0,
+    )
+
+    assert fills[0].status == "rejected_invalid_open_price"
+
+
+def test_simulate_next_day_fills_rejects_overflowing_open_price(sample_bundle) -> None:
+    class OverflowFloat:
+        def __float__(self) -> float:
+            raise OverflowError("synthetic overflow")
+
+    intents = build_order_intents(
+        current_positions={},
+        target=TargetPortfolio(
+            strategy_name="etf_rotation", weights={"510300.SH": 0.01, "CASH": 0.99}
+        ),
+        prices=pd.Series({"510300.SH": 3.51}),
+        trade_date=pd.Timestamp("2024-01-05"),
+        portfolio_value=1_000_000.0,
+    )
+    mutated_bars = sample_bundle.bars.astype({"open": "object"})
+    mutated_bars.loc[(pd.Timestamp("2024-01-05"), "510300.SH"), "open"] = OverflowFloat()
+    mutated_bundle = replace(sample_bundle, bars=mutated_bars)
+
+    fills = simulate_next_day_fills(
+        intents,
+        mutated_bundle,
         trade_date=pd.Timestamp("2024-01-05"),
         commission_rate=0.0003,
         stamp_duty_rate=0.001,

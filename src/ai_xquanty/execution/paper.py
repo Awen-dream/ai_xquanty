@@ -108,7 +108,7 @@ def simulate_next_day_fills(
             continue
         try:
             open_price = float(row["open"])
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             open_price = float("nan")
         if not math.isfinite(open_price) or open_price <= 0:
             fills.append(
