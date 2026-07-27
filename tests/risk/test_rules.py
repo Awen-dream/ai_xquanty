@@ -34,4 +34,9 @@ def test_apply_risk_rules_clamps_weights_and_preserves_minimum_cash() -> None:
         drawdown_stop=0.10,
     )
 
-    assert protected.weights == {"510300.SH": 0.50, "510500.SH": 0.40, "CASH": 0.20}
+    assert protected.weights == {
+        "510300.SH": 0.444444,
+        "510500.SH": 0.355556,
+        "CASH": 0.2,
+    }
+    assert round(sum(protected.weights.values()), 6) == 1.0

@@ -41,6 +41,27 @@ def test_build_order_intents_generates_sell_intents_with_t1_available_quantity()
     ]
 
 
+def test_build_order_intents_rounds_buy_delta_down_to_full_lots() -> None:
+    intents = build_order_intents(
+        current_positions={
+            "510300.SH": PositionSnapshot(
+                symbol="510300.SH",
+                quantity=150,
+                available_quantity=150,
+                average_cost=3.50,
+            )
+        },
+        target=TargetPortfolio(
+            strategy_name="etf_rotation", weights={"510300.SH": 0.000702, "CASH": 0.999298}
+        ),
+        prices=pd.Series({"510300.SH": 3.51}),
+        trade_date=pd.Timestamp("2024-01-05"),
+        portfolio_value=1_000_000.0,
+    )
+
+    assert intents == []
+
+
 def test_simulate_next_day_fills_marks_limit_up_buy_as_unfilled(sample_bundle) -> None:
     intents = build_order_intents(
         current_positions={},
@@ -117,3 +138,28 @@ def test_simulate_next_day_fills_rejects_limit_down_sell(sample_bundle) -> None:
     )
 
     assert fills[0].status == "rejected_limit_down"
+
+
+def test_simulate_next_day_fills_rejects_invalid_open_price(sample_bundle) -> None:
+    intents = build_order_intents(
+        current_positions={},
+        target=TargetPortfolio(
+            strategy_name="etf_rotation", weights={"510300.SH": 0.01, "CASH": 0.99}
+        ),
+        prices=pd.Series({"510300.SH": 3.51}),
+        trade_date=pd.Timestamp("2024-01-05"),
+        portfolio_value=1_000_000.0,
+    )
+    sample_bundle.bars.loc[(pd.Timestamp("2024-01-05"), "510300.SH"), "open"] = float("nan")
+
+    fills = simulate_next_day_fills(
+        intents,
+        sample_bundle,
+        trade_date=pd.Timestamp("2024-01-05"),
+        commission_rate=0.0003,
+        stamp_duty_rate=0.001,
+        transfer_fee_rate=0.00001,
+        slippage_bps=5.0,
+    )
+
+    assert fills[0].status == "rejected_invalid_open_price"

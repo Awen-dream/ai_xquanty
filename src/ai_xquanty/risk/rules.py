@@ -19,6 +19,13 @@ def apply_risk_rules(
         for symbol, weight in target.weights.items()
         if symbol != "CASH"
     }
-    cash_weight = max(min_cash_weight, 1.0 - sum(clamped.values()))
+    max_non_cash_weight = 1.0 - min_cash_weight
+    total_non_cash_weight = sum(clamped.values())
+    if total_non_cash_weight > max_non_cash_weight and total_non_cash_weight > 0:
+        scale = max_non_cash_weight / total_non_cash_weight
+        clamped = {
+            symbol: round(weight * scale, 6) for symbol, weight in clamped.items()
+        }
+    cash_weight = round(1.0 - sum(clamped.values()), 6)
     clamped["CASH"] = round(cash_weight, 6)
     return TargetPortfolio(strategy_name=target.strategy_name, weights=clamped)

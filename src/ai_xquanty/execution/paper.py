@@ -16,7 +16,7 @@ def build_order_intents(
     trade_date: pd.Timestamp,
     portfolio_value: float,
 ) -> list[OrderIntent]:
-    """Build buy and sell intents rounded down to exchange trading lots."""
+    """Build buy and sell intents with buy quantities rounded down to trading lots."""
     intents: list[OrderIntent] = []
     symbols = {
         symbol for symbol in target.weights if symbol != "CASH"
@@ -27,12 +27,15 @@ def build_order_intents(
         current_quantity = current_positions.get(symbol).quantity if symbol in current_positions else 0
         delta = target_quantity - current_quantity
         if delta > 0:
+            buy_quantity = (delta // 100) * 100
+            if buy_quantity == 0:
+                continue
             intents.append(
                 OrderIntent(
                     trade_date=trade_date.date(),
                     symbol=symbol,
                     side="BUY",
-                    quantity=delta,
+                    quantity=buy_quantity,
                 )
             )
         elif delta < 0:
@@ -101,10 +104,22 @@ def simulate_next_day_fills(
                 )
             )
             continue
+        open_price = float(row["open"])
+        if not pd.notna(open_price) or open_price <= 0:
+            fills.append(
+                FillRecord(
+                    symbol=intent.symbol,
+                    status="rejected_invalid_open_price",
+                    quantity=0,
+                    price=0.0,
+                    fees=0.0,
+                )
+            )
+            continue
         slippage_multiplier = 1.0 + slippage_bps / 10_000.0
         if intent.side == "SELL":
             slippage_multiplier = 1.0 - slippage_bps / 10_000.0
-        price = float(row["open"]) * slippage_multiplier
+        price = open_price * slippage_multiplier
         fees = price * intent.quantity * (
             commission_rate
             + transfer_fee_rate
