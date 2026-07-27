@@ -163,3 +163,28 @@ def test_simulate_next_day_fills_rejects_invalid_open_price(sample_bundle) -> No
     )
 
     assert fills[0].status == "rejected_invalid_open_price"
+
+
+def test_simulate_next_day_fills_rejects_infinite_open_price(sample_bundle) -> None:
+    intents = build_order_intents(
+        current_positions={},
+        target=TargetPortfolio(
+            strategy_name="etf_rotation", weights={"510300.SH": 0.01, "CASH": 0.99}
+        ),
+        prices=pd.Series({"510300.SH": 3.51}),
+        trade_date=pd.Timestamp("2024-01-05"),
+        portfolio_value=1_000_000.0,
+    )
+    sample_bundle.bars.loc[(pd.Timestamp("2024-01-05"), "510300.SH"), "open"] = float("inf")
+
+    fills = simulate_next_day_fills(
+        intents,
+        sample_bundle,
+        trade_date=pd.Timestamp("2024-01-05"),
+        commission_rate=0.0003,
+        stamp_duty_rate=0.001,
+        transfer_fee_rate=0.00001,
+        slippage_bps=5.0,
+    )
+
+    assert fills[0].status == "rejected_invalid_open_price"

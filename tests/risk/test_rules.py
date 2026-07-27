@@ -40,3 +40,22 @@ def test_apply_risk_rules_clamps_weights_and_preserves_minimum_cash() -> None:
         "CASH": 0.2,
     }
     assert round(sum(protected.weights.values()), 6) == 1.0
+
+
+def test_apply_risk_rules_preserves_cash_floor_after_rounding() -> None:
+    target = TargetPortfolio(
+        strategy_name="etf_rotation",
+        weights={"A": 0.50, "B": 0.50, "C": 0.50, "CASH": 0.0},
+    )
+
+    protected = apply_risk_rules(
+        target,
+        current_positions={},
+        current_drawdown=0.0,
+        max_single_weight=0.50,
+        min_cash_weight=0.20,
+        drawdown_stop=0.10,
+    )
+
+    assert round(sum(protected.weights.values()), 6) == 1.0
+    assert protected.weights["CASH"] >= 0.20

@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 
 from ai_xquanty.domain.models import (
@@ -104,8 +106,11 @@ def simulate_next_day_fills(
                 )
             )
             continue
-        open_price = float(row["open"])
-        if not pd.notna(open_price) or open_price <= 0:
+        try:
+            open_price = float(row["open"])
+        except (TypeError, ValueError):
+            open_price = float("nan")
+        if not math.isfinite(open_price) or open_price <= 0:
             fills.append(
                 FillRecord(
                     symbol=intent.symbol,

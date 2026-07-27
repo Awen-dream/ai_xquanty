@@ -26,6 +26,10 @@ def apply_risk_rules(
         clamped = {
             symbol: round(weight * scale, 6) for symbol, weight in clamped.items()
         }
+        overflow = round(sum(clamped.values()) - max_non_cash_weight, 6)
+        if overflow > 0:
+            largest_symbol = max(clamped, key=clamped.get)
+            clamped[largest_symbol] = round(clamped[largest_symbol] - overflow, 6)
     cash_weight = round(1.0 - sum(clamped.values()), 6)
     clamped["CASH"] = round(cash_weight, 6)
     return TargetPortfolio(strategy_name=target.strategy_name, weights=clamped)
