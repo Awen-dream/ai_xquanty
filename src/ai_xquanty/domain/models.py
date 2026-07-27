@@ -60,3 +60,4 @@ class PositionSnapshot:
     symbol: str
     quantity: int
     average_cost: float
+    available_quantity: int | None = None
