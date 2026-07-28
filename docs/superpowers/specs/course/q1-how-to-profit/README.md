@@ -1,4 +1,4 @@
-# Q1 Notebook
+# Q1 Notebook 说明
 
 这个目录放 Q1《量化交易怎么赚钱？》的可运行课程产物。
 
@@ -9,4 +9,4 @@
 定位原则：
 
 - `docs/.../specs/` 保存课程设计与提示词规范
-- `docs/superpowers/specs/course/q1-how-to-profit/` 保存课程 specs 与最终可运行 notebook
+- `docs/superpowers/specs/course/q1-how-to-profit/` 保存课程 specs 与最终可运行的 notebook 产物
