@@ -3,6 +3,7 @@
 > **评分 38/55** · 修改后可发布；维度 4「可复现」与 6「抽象层次」是主要短板
 > 评审基线：spec-review-handbook 11 维 rubric
 > **本文档定位**：服务于「打磨示例 spec + 萃取写法方法/模板」两个目标
+> **2026-07-28 状态更新**：`q2-what-to-buy.ipynb` 当前已锁定 `SIGNAL_START = "2023-03-05"`、`SIGNAL_END = "2026-03-05"`、`SIGNAL_DOWNLOAD_END = "2026-03-06"`，并采用 `MovingAverageStateSignal + StaticUniverse((symbol,)) + broker=` 的实现方式，且已补充 Step 1 机械断言。下文保留的是这份 spec 的原始审稿记录；凡涉及 `today/动态日期`、`router/receiver`、`缺少断言` 的表述，应以上述现状为准。
 
 ---
 

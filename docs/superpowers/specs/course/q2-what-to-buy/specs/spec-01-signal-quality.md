@@ -44,9 +44,10 @@
    - 当 `mktdata[fast] > mktdata[slow]` 时返回 `BUY`。
    - 其他时间返回 `HOLD`，退出由 `ExitRule` 处理。
 6. 对每个标的（5 只个股 + 沪深300ETF），构建一个 `Strategy` 并用 `Engine` 运行回测：
-   - 信号：`MovingAverageStateSignal(fast="sma_1", slow="sma_20")`，即收盘价在 20 日均线上方时持有。
+   - 用 `StaticUniverse((symbol,))` 为当前标的构建单资产标的池。
+   - 在 `signals` 中注册 `{"ma_state": (MovingAverageStateSignal(), {"fast": "sma_1", "slow": "sma_20"})}`，即收盘价在 20 日均线上方时持有。
    - `Strategy(..., portfolio=SignalToPositionOptimizer(signal="ma_state", buy_weight=1.0, sell_weight=0.0))`。
-   - `Engine().run(..., market=provider, broker=SimBroker(), start=SIGNAL_START, end=SIGNAL_END, rules=[ExitRule(fast="sma_1", slow="sma_20")])`。
+   - 先创建 `broker = SimBroker()`，再调用 `Engine().run(..., market=provider, broker=broker, start=SIGNAL_START, end=SIGNAL_END, rules=[ExitRule(fast="sma_1", slow="sma_20")])`。
    - 用 `result.total_return()` 获取收益率。
    - 用 `result.annualized_volatility()` 获取年化波动率。
 7. 画两张横向柱状图（上下排列，figsize 10×8）：
@@ -55,10 +56,14 @@
 
 ## 结果呈现
 
-1. 打印每只标的的回测结果，格式：`600519.SS (贵州茅台): 收益率 X.XX%  年化波动率 X.XX%`。
-2. 打印标题必须包含固定窗口：`均线策略回测结果（20日均线，2023-03-05 至 2026-03-05）`。
-3. 两张横向柱状图（收益率 + 年化波动率）。
-4. 打印分析：
+1. 先做数据合法性检查：
+   - `assert len(results_ret) == 6`
+   - `assert "沪深300ETF" in results_ret`
+   - `assert all(0 < v < 1 for v in results_vol.values())`
+2. 打印每只标的的回测结果，格式：`600519.SS (贵州茅台): 收益率 X.XX%  年化波动率 X.XX%`。
+3. 打印标题必须包含固定窗口：`均线策略回测结果（20日均线，2023-03-05 至 2026-03-05）`。
+4. 两张横向柱状图（收益率 + 年化波动率）。
+5. 打印分析：
    - 「同样的均线策略，5 只个股的结果天差地别——从大幅盈利到严重亏损都有。」
    - 「再看波动率：个股年化波动率在 XX%-XX%，而沪深300ETF 只有 XX%——300 只股票的噪音互相抵消，波动被分散掉了。」
    - 「组合能对抗波动。ETF 就是一种组合。」

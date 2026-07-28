@@ -3,6 +3,7 @@
 > **评分 42/55** · 修改后可发布；维度 4「可复现」与 9「简洁」需修补
 > 评审基线：spec-review-handbook 11 维 rubric
 > **本文档定位**：服务于「打磨示例 spec + 萃取写法方法/模板」两个目标
+> **2026-07-28 状态更新**：`q2-what-to-buy.ipynb` 当前已使用 `as_of_date=ETF_END` 构建 `StaticUniverse` 快照，并补充了相关性矩阵形状、对角线、区间范围与 `snapshot.symbols` 的机械断言。下文保留的是这份 spec 的原始审稿记录；凡涉及 `today/动态日期`、`as_of_date=today`、`缺少断言` 的表述，应以上述现状为准。
 
 ---
 
