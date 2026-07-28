@@ -59,6 +59,20 @@ def test_q1_notebook_uses_non_overlapping_iloc_split() -> None:
     assert "test = df.loc[split_date:]" not in code
 
 
+def test_q1_notebook_uses_fixed_recent_five_year_window_and_download_guard() -> None:
+    notebook = _load_notebook()
+    code = "\n".join(
+        _cell_source(cell)
+        for cell in notebook["cells"]
+        if cell.get("cell_type") == "code"
+    )
+    assert 'DATA_START = "2021-07-28"' in code
+    assert 'DATA_END = "2026-07-27"' in code
+    assert "pd.Timedelta(days=1)" in code
+    assert "if df.empty:" in code
+    assert "raise RuntimeError(" in code
+
+
 def test_q1_notebook_contains_required_validation_assertions() -> None:
     notebook = _load_notebook()
     code = "\n".join(

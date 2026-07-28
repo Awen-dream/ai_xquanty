@@ -5,6 +5,7 @@
 - 主 notebook：`notebooks/q1-strategy.ipynb`
 - 对应 specs：`docs/superpowers/specs/course/q1-how-to-profit/specs/`
 - 环境准备：`docs/superpowers/specs/course/env-setup/spec-01-env-setup-mac.md`
+- 当前数据窗口：固定最近 5 年快照（2021-07-28 ～ 2026-07-27）
 
 定位原则：
 
