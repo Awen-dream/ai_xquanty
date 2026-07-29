@@ -6,6 +6,7 @@ dependencies = [
   "numpy>=2.0,<3.0",
   "pandas>=2.2,<3.0",
   "pyarrow>=17,<19",
+  "yfinance>=0.2,<2.0",
 ]
 
 [project.optional-dependencies]
