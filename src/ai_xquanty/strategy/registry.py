@@ -15,12 +15,19 @@ def resolve_signal_fn(
             bundle, as_of, lookback_days=3, top_n=2
         )
     if strategy_name == "trend_filter":
-        return lambda bundle, as_of: compute_trend_filter_signals(
-            bundle,
-            as_of,
-            lookback_days=3,
-            short_window=2,
-            long_window=4,
-            top_n=2,
-        )
+        def _trend_filter_when_ready(
+            bundle: MarketDataBundle, as_of: pd.Timestamp
+        ) -> list[SignalSnapshot]:
+            if len(bundle.calendar[bundle.calendar <= as_of]) < 4:
+                return []
+            return compute_trend_filter_signals(
+                bundle,
+                as_of,
+                lookback_days=3,
+                short_window=2,
+                long_window=4,
+                top_n=2,
+            )
+
+        return _trend_filter_when_ready
     raise ValueError(f"Unsupported strategy: {strategy_name}")

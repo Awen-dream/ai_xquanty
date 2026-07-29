@@ -2,8 +2,13 @@ import pandas as pd
 import pytest
 from pathlib import Path
 
-from ai_xquanty.config import BacktestConfig
-from ai_xquanty.backtest.engine import run_backtest, select_weekly_rebalance_dates
+from ai_xquanty.config import BacktestConfig, RealBacktestConfig
+from ai_xquanty.backtest.engine import (
+    run_backtest,
+    run_backtest_on_bundle,
+    select_weekly_rebalance_dates,
+)
+from ai_xquanty.domain.models import MarketDataBundle
 
 
 def test_run_backtest_uses_trend_filter_strategy_when_selected(
@@ -70,3 +75,28 @@ def test_select_weekly_rebalance_dates_uses_last_trading_day_of_week() -> None:
     )
 
     assert select_weekly_rebalance_dates(calendar) == [pd.Timestamp("2024-01-05")]
+
+
+def test_trend_filter_skips_first_weekly_rebalance_without_required_history(
+    tmp_path: Path,
+) -> None:
+    calendar = pd.to_datetime(["2021-07-28", "2021-07-29", "2021-07-30", "2021-08-02"])
+    bars = pd.DataFrame(
+        {"close": [3.50, 3.55, 3.60, 3.65]},
+        index=pd.MultiIndex.from_product(
+            [calendar, ["510300.SS"]], names=["trade_date", "symbol"]
+        ),
+    )
+    bundle = MarketDataBundle(calendar=calendar, instruments={}, bars=bars)
+    config = RealBacktestConfig(
+        start="2021-07-28",
+        end="2021-08-02",
+        symbols=("510300.SS",),
+        cache_dir=tmp_path,
+        strategy_name="trend_filter",
+    )
+
+    result = run_backtest_on_bundle(config, bundle)
+
+    assert result.fills.empty
+    assert result.equity_curve["nav"].tolist() == [1_000_000.0] * 4
