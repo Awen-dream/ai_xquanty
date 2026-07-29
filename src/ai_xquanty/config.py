@@ -8,12 +8,16 @@ class BacktestConfig:
     instruments_path: Path
     bars_path: Path
     initial_cash: float = 1_000_000.0
+    strategy_name: str = "rotation"
 
     @classmethod
-    def from_sample_data(cls, repo_root: Path) -> "BacktestConfig":
+    def from_sample_data(
+        cls, repo_root: Path, strategy_name: str = "rotation"
+    ) -> "BacktestConfig":
         sample_dir = repo_root / "data" / "sample"
         return cls(
             calendar_path=sample_dir / "calendar.csv",
             instruments_path=sample_dir / "instruments.csv",
             bars_path=sample_dir / "bars.csv",
+            strategy_name=strategy_name,
         )

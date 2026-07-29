@@ -10,7 +10,7 @@ from ai_xquanty.execution.paper import build_order_intents, simulate_next_day_fi
 from ai_xquanty.portfolio.targets import build_target_portfolio
 from ai_xquanty.reporting.metrics import compute_summary_metrics
 from ai_xquanty.risk.rules import apply_risk_rules
-from ai_xquanty.strategy.etf_rotation import compute_etf_signals
+from ai_xquanty.strategy.registry import resolve_signal_fn
 
 
 @dataclass(frozen=True)
@@ -96,6 +96,7 @@ def _mark_holdings_to_market(
 
 def run_backtest(config: BacktestConfig) -> BacktestResult:
     """Run weekly rebalances, next-session fills, and daily mark-to-market NAV."""
+    signal_fn = resolve_signal_fn(config.strategy_name)
     bundle = load_market_data(config)
     nav_rows: list[dict[str, float | str]] = []
     fill_rows: list[dict[str, float | int | str]] = []
@@ -127,7 +128,7 @@ def run_backtest(config: BacktestConfig) -> BacktestResult:
         if trade_date not in rebalance_dates:
             continue
 
-        signals = compute_etf_signals(bundle, trade_date, lookback_days=3, top_n=2)
+        signals = signal_fn(bundle, trade_date)
         target = build_target_portfolio(signals, cash_buffer=0.10, max_positions=2)
         protected = apply_risk_rules(
             target,

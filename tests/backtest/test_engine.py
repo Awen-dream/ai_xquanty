@@ -1,8 +1,31 @@
 import pandas as pd
 import pytest
+from pathlib import Path
 
 from ai_xquanty.config import BacktestConfig
 from ai_xquanty.backtest.engine import run_backtest, select_weekly_rebalance_dates
+
+
+def test_run_backtest_uses_trend_filter_strategy_when_selected(
+    repo_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    used_names: list[str] = []
+
+    def fake_resolve_signal_fn(strategy_name: str):
+        used_names.append(strategy_name)
+
+        def _fake_signal_fn(bundle, as_of):
+            return []
+
+        return _fake_signal_fn
+
+    monkeypatch.setattr("ai_xquanty.backtest.engine.resolve_signal_fn", fake_resolve_signal_fn)
+
+    config = BacktestConfig.from_sample_data(repo_root, strategy_name="trend_filter")
+    result = run_backtest(config)
+
+    assert used_names == ["trend_filter"]
+    assert result.equity_curve["nav"].tolist()[0] == 1_000_000.0
 
 
 def test_run_backtest_applies_filled_trade_costs_to_cash_holdings_and_nav(
