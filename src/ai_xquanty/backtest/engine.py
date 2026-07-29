@@ -3,9 +3,14 @@ import math
 
 import pandas as pd
 
-from ai_xquanty.config import BacktestConfig
+from ai_xquanty.config import BacktestConfig, RealBacktestConfig
 from ai_xquanty.data.loaders import load_market_data
-from ai_xquanty.domain.models import FillRecord, OrderIntent, PositionSnapshot
+from ai_xquanty.domain.models import (
+    FillRecord,
+    MarketDataBundle,
+    OrderIntent,
+    PositionSnapshot,
+)
 from ai_xquanty.execution.paper import build_order_intents, simulate_next_day_fills
 from ai_xquanty.portfolio.targets import build_target_portfolio
 from ai_xquanty.reporting.baseline import compute_baseline_comparison
@@ -98,8 +103,23 @@ def _mark_holdings_to_market(
 
 def run_backtest(config: BacktestConfig) -> BacktestResult:
     """Run weekly rebalances, next-session fills, and daily mark-to-market NAV."""
-    signal_fn = resolve_signal_fn(config.strategy_name)
     bundle = load_market_data(config)
+    result = run_backtest_on_bundle(config, bundle)
+    return BacktestResult(
+        equity_curve=result.equity_curve,
+        fills=result.fills,
+        summary=result.summary,
+        baseline_comparison=compute_baseline_comparison(
+            result, bundle, config.initial_cash
+        ),
+    )
+
+
+def run_backtest_on_bundle(
+    config: BacktestConfig | RealBacktestConfig, bundle: MarketDataBundle
+) -> BacktestResult:
+    """Run a backtest against an already prepared market-data bundle."""
+    signal_fn = resolve_signal_fn(config.strategy_name)
     nav_rows: list[dict[str, float | str]] = []
     fill_rows: list[dict[str, float | int | str]] = []
     scheduled_fills: dict[pd.Timestamp, list[tuple[OrderIntent, FillRecord]]] = {}
@@ -170,16 +190,8 @@ def run_backtest(config: BacktestConfig) -> BacktestResult:
         fill_rows,
         columns=["trade_date", "symbol", "side", "status", "quantity", "price", "fees"],
     )
-    result = BacktestResult(
+    return BacktestResult(
         equity_curve=equity_curve,
         fills=fills_df,
         summary=compute_summary_metrics(equity_curve),
-    )
-    return BacktestResult(
-        equity_curve=result.equity_curve,
-        fills=result.fills,
-        summary=result.summary,
-        baseline_comparison=compute_baseline_comparison(
-            result, bundle, config.initial_cash
-        ),
     )
