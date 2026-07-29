@@ -8,6 +8,7 @@ from ai_xquanty.data.loaders import load_market_data
 from ai_xquanty.domain.models import FillRecord, OrderIntent, PositionSnapshot
 from ai_xquanty.execution.paper import build_order_intents, simulate_next_day_fills
 from ai_xquanty.portfolio.targets import build_target_portfolio
+from ai_xquanty.reporting.baseline import compute_baseline_comparison
 from ai_xquanty.reporting.metrics import compute_summary_metrics
 from ai_xquanty.risk.rules import apply_risk_rules
 from ai_xquanty.strategy.registry import resolve_signal_fn
@@ -18,6 +19,7 @@ class BacktestResult:
     equity_curve: pd.DataFrame
     fills: pd.DataFrame
     summary: dict[str, float]
+    baseline_comparison: dict[str, float] | None = None
 
 
 def select_weekly_rebalance_dates(calendar: pd.DatetimeIndex) -> list[pd.Timestamp]:
@@ -168,8 +170,16 @@ def run_backtest(config: BacktestConfig) -> BacktestResult:
         fill_rows,
         columns=["trade_date", "symbol", "side", "status", "quantity", "price", "fees"],
     )
-    return BacktestResult(
+    result = BacktestResult(
         equity_curve=equity_curve,
         fills=fills_df,
         summary=compute_summary_metrics(equity_curve),
+    )
+    return BacktestResult(
+        equity_curve=result.equity_curve,
+        fills=result.fills,
+        summary=result.summary,
+        baseline_comparison=compute_baseline_comparison(
+            result, bundle, config.initial_cash
+        ),
     )

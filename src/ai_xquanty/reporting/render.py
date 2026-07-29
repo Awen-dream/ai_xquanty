@@ -11,3 +11,8 @@ def write_backtest_artifacts(result: BacktestResult, output_dir: Path) -> None:
     result.fills.to_csv(output_dir / "fills.csv", index=False)
     with (output_dir / "summary.json").open("w", encoding="utf-8") as handle:
         json.dump(result.summary, handle, indent=2, ensure_ascii=False)
+    if result.baseline_comparison is not None:
+        with (output_dir / "baseline_comparison.json").open(
+            "w", encoding="utf-8"
+        ) as handle:
+            json.dump(result.baseline_comparison, handle, indent=2, ensure_ascii=False)
