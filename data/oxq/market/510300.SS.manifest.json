@@ -1,0 +1,12 @@
+{
+  "symbol": "510300.SS",
+  "provider": "yfinance",
+  "start": "2021-01-01",
+  "end": "2026-03-04",
+  "rows": 1247,
+  "sha256": "df1c8604ff33b33e1b0b0a146742d8d671badc1869bc3c5aa5b1a2630ea435e5",
+  "created_at": "2026-07-29T01:58:00.989547+00:00",
+  "extra": {
+    "auto_adjust": true
+  }
+}

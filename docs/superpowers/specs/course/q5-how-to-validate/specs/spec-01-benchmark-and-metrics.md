@@ -55,11 +55,12 @@
 
 5. 先阅读 `oxq.portfolio.optimizers` 模块源码，了解 `EqualWeightOptimizer`、`RiskParityOptimizer`、`TopNRankingOptimizer` 的构造参数和 `required_indicators` 属性。
 
-6. 定义四个 portfolio 配置常量：
+6. 定义可复用的 portfolio 配置常量与颜色常量：
    - `EW_PORTFOLIO = EqualWeightOptimizer()`
    - `RP_PORTFOLIO = RiskParityOptimizer(volatility_col="vol")`
    - `TNR_PORTFOLIO = TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)`
-   - `RP_SL_PORTFOLIO = RiskParityOptimizer(volatility_col="vol")`（与 RP 相同，止损在运行时指定）
+   - `RESULT_COLORS = {"EqualWeight": "#4472C4", "RiskParity": "#ED7D31", "TopNRanking": "#70AD47", "RP+止损5%": "#FFC000", "等权买入持有": "#A5A5A5"}`
+   - 注意：`RP+止损5%` 不是第二个 optimizer；它复用 `RP_PORTFOLIO`，只是运行时额外加 `stop_loss=0.05`
 
 7. 定义辅助函数 `run_strategy(portfolio, indicators=None, freq=10, stop_loss=None)`：
    - `portfolio` 是一个 optimizer 实例（如 `EqualWeightOptimizer()`）
@@ -71,13 +72,13 @@
    - 返回 RunResult
    - 供后续 spec 复用
 
-8. 运行四个策略：
+8. 运行四个策略，并把结果存入 `results` 字典，键名固定为 `EqualWeight`、`RiskParity`、`TopNRanking`、`RP+止损5%`：
    - EqualWeight：`run_strategy(EW_PORTFOLIO)`
    - RiskParity：`run_strategy(RP_PORTFOLIO, indicators={"vol": (RollingVolatility(), {"column": "close", "period": 20})})`
    - TopNRanking：`run_strategy(TNR_PORTFOLIO, indicators={"vol": (RollingVolatility(), {"column": "close", "period": 20}), "mom": (Momentum(), {"column": "close", "period": 20}), "ram": (Ratio(), {"col_a": "mom", "col_b": "vol"})})`
-   - RiskParity + 止损：`run_strategy(RP_SL_PORTFOLIO, indicators={"vol": (RollingVolatility(), {"column": "close", "period": 20})}, stop_loss=0.05)`
+   - RiskParity + 止损：`run_strategy(RP_PORTFOLIO, indicators={"vol": (RollingVolatility(), {"column": "close", "period": 20})}, stop_loss=0.05)`
 
-9. 构造买入持有基准——等权买入 3 只 ETF，之后不做任何交易：
+9. 构造买入持有基准——等权买入 3 只 ETF，之后不做任何交易；把基准净值序列保存为 `eq_bh_portfolio` 供后续 spec 复用：
    - 加载价格数据，每只 ETF 归一化到 1，等权平均
    - 计算基准的累计收益、年化收益、年化波动率、最大回撤、夏普比
 
@@ -110,9 +111,12 @@
 
 执行成功的标志：
 - 新增的单元格无报错运行完毕
+- `results` 恰好包含 4 个固定键：`EqualWeight`、`RiskParity`、`TopNRanking`、`RP+止损5%`
 - 对比表有 5 行（4 策略 + 1 基准），8 个指标列（使用中文指标名：夏普比、卡玛比、索提诺比）
+- 如果把结果整理为 DataFrame，建议加入机械检查：`assert comparison_df.shape == (5, 8)`；超额收益表建议满足 `assert alpha_df.shape[0] == 4`
 - 净值曲线图显示 5 条线（4 实线 + 1 虚线）
 - 超额收益有正有负或全正
+- 对“参考结果应接近”的判断，建议使用绝对误差不超过 `0.03`（3 个百分点）作为容差，而不是肉眼估计
 - 固定窗口参考结果应接近：
   - EqualWeight 累计收益 `83.59%`
   - RiskParity 累计收益 `101.68%`

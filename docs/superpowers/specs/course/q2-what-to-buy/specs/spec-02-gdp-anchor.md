@@ -25,14 +25,14 @@
 
 ## 要求
 
-1. 使用 `WorldBankDownloader` 一次性下载全球前 10 大经济体的 GDP 数据：
+1. 使用 `FactorDownloader(WorldBankDownloader(), sub="macro")` 一次性下载全球前 10 大经济体的 GDP 数据：
    ```python
-   from oxq.data import WorldBankDownloader, read_factor
-   wb = WorldBankDownloader()
+   from oxq.data import FactorDownloader, WorldBankDownloader, read_factor
+   factor_dl = FactorDownloader(WorldBankDownloader(), sub="macro")
    countries = ["USA", "CHN", "DEU", "JPN", "IND", "GBR", "FRA", "ITA", "BRA", "CAN"]
-   wb.download("gdp", countries=countries, start_year=2020, end_year=2024)
+   factor_dl.download("gdp", "2020", "2024", countries=countries)
    ```
-   注意：第一个参数是指标名 `"gdp"`，`countries` 是列表，一次调用下载所有国家。
+   注意：第一个参数是指标名 `"gdp"`，`start/end` 这里使用年份字符串，`countries` 是列表，一次调用下载所有国家。
 2. GDP 下载需要用 `try/except` 包裹；下载失败时打印错误并继续使用本地缓存。
 3. 使用 `read_factor` 读取数据，取最新一年，转换为万亿美元：
    ```python

@@ -16,29 +16,37 @@
 
 ## 要求
 
-1. 阅读以下 oxq 接口的源码：
+1. 先做前提检查：当前 notebook 内核中应已经执行完 spec-01，且至少存在以下变量：
+   - `run_strategy`
+   - `results`
+   - `eq_bh_portfolio`
+   - `TNR_PORTFOLIO`
+   - `RESULT_COLORS`
+   - 如果缺少任意一个，先回到 spec-01 重新运行，不要在空内核中直接执行本 spec
+
+2. 阅读以下 oxq 接口的源码：
    - `result.daily_returns()` — 返回日收益率 Series
    - `result.equity_curve` — 净值序列（list of tuples: (date_str, value)）
 
-2. 按年度拆解四个策略 + 基准：
+3. 按年度拆解四个策略 + 基准：
    - 用 `daily_returns()` 按年分组
    - 计算每年的：年收益率（累乘）、年波动率、年夏普比、年内最大回撤
    - 同时计算等权买入持有基准的逐年收益
    - 年内样本少于 20 个交易日时跳过：`if len(year_data) < 20: continue`
 
-3. 打印逐年对比表：
+4. 打印逐年对比表：
    - 行：年份
    - 列：四个策略各一列（年收益），最后一列是基准年收益
    - 负收益用 `*` 标注
 
-4. 画逐年收益柱状图（figsize 14x6）：
+5. 画逐年收益柱状图（figsize 14x6）：
    - 每年一组柱子，每个策略一种颜色 + 基准灰色
    - 颜色与 spec-01 一致：EqualWeight `#4472C4`、RiskParity `#ED7D31`、TopNRanking `#70AD47`、RP+止损5% `#FFC000`、基准 `#A5A5A5`
    - y=0 处画一条水平线
    - 标题「逐年收益对比」
    - 保存为 `../book/images/02-annual-return-comparison.png`
 
-5. 深挖 TopNRanking 在负收益年份：
+6. 深挖 TopNRanking 在负收益年份：
    - 用不同动量窗口 `mom_period = [5, 10, 15, 20, 25, 30]` 分别构造 `TopNRankingOptimizer(score_col="ram", n=3, filter_negative=True)`
    - 指标使用 dict 形态：`{"vol": (RollingVolatility(), {"column": "close", "period": 20}), "mom": (Momentum(), {"column": "close", "period": p}), "ram": (Ratio(), {"col_a": "mom", "col_b": "vol"})}`
    - 每个窗口只调用一次 `run_strategy(...)`，结果存入 `deep_dive[period]`
@@ -47,7 +55,7 @@
    - 从 `deep_dive` 里直接判断是否所有窗口都亏钱，不要重新回测
    - 如果所有窗口都亏钱，说明不是参数问题
 
-6. 打印分析（根据实际数据动态描述方向）：
+7. 打印分析（根据实际数据动态描述方向）：
    - 哪些策略"每年都赚"？哪些有负收益年份？
    - 负收益年份中，基准表现如何？
    - TopNRanking 负收益年份深挖结论
@@ -65,9 +73,13 @@
 ## 验证
 
 执行成功的标志：
+- `assert len(results) == 4`
 - 逐年表有完整的年份覆盖，每年 5 列数据（4 策略 + 基准）
+- `assert len(all_years) >= 4`
 - 柱状图每年 5 根柱子
+- 如果做结构化检查，建议补一条年度累乘一致性校验：对任一策略，`np.prod([1 + annual_data[name][y]["return"] for y in annual_data[name]]) - 1` 应与 `results[name].total_return()` 接近（容差建议 `0.03`）
 - TopNRanking 深挖表有 6 行（6 个动量窗口）
+- 如果 TopNRanking 有负收益年份，建议加入 `assert len(deep_dive) == 6`
 - 如果 TopNRanking 有负收益年份，深挖表展示了该年份各窗口的表现
 - 固定窗口参考结果应接近：
   - 2021 年 TopNRanking 为 `-4.81%`

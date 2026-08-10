@@ -1,0 +1,12 @@
+{
+  "symbol": "000858.SZ",
+  "provider": "yfinance",
+  "start": "2023-03-05",
+  "end": "2026-03-06",
+  "rows": 726,
+  "sha256": "42d1abb2b8eedbe84630cb482e5fd6276514acf022be7ce1d6864adc610b473e",
+  "created_at": "2026-07-29T01:57:51.909274+00:00",
+  "extra": {
+    "auto_adjust": true
+  }
+}
