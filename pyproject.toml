@@ -3,9 +3,13 @@ name = "ai-xquanty"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+  "httpx>=0.28,<1.0",
+  "matplotlib>=3.10,<4.0",
   "numpy>=2.0,<3.0",
+  "open-xquant>=0.1,<0.2",
   "pandas>=2.2,<3.0",
   "pyarrow>=17,<19",
+  "websockets>=15,<16",
   "yfinance>=0.2,<2.0",
 ]
 

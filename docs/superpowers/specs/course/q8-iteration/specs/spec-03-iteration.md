@@ -20,7 +20,8 @@
 1. 阅读以下 oxq 模块的源码，了解接口的输入、输出和参数含义：
    - `oxq.core.strategy` — `Strategy` 的 `hypothesis: str` 和 `objectives: dict` 字段
    - `oxq.core.engine` — `Engine.run()` 方法（注意 `rules` 参数）
-   - `oxq.portfolio.optimizers` — `RiskParityOptimizer`、`VolFilteredOptimizer`（包装器，高波动期将权重缩放 0.5）
+   - `oxq.portfolio.optimizers` — `RiskParityOptimizer`
+   - notebook 中定义的 `VolFilteredOptimizer` 包装器（高波动期将权重缩放 0.5，剩余权重归入现金）
    - `oxq.observe` — `ExperimentLog`（`add()` 方法、`to_dataframe()` 方法）
 
 2. 迭代 1——调仓频率对照实验：
@@ -38,7 +39,7 @@
 3. 迭代 2——波动率过滤对照实验：
    - 创建 Strategy 时填写 hypothesis 和 objectives（目标：回撤改善 ≥ 30%，夏普 ≥ 1.0）
    - 打印策略的 hypothesis 和 objectives 字段值
-   - 用 `VolFilteredOptimizer` 包装 `RiskParityOptimizer`：高波动期自动将权重缩放 0.5，无需手动修改信号
+   - 在 notebook 中定义 `VolFilteredOptimizer` 包装 `RiskParityOptimizer`：高波动期自动将权重缩放 0.5，无需手动修改信号
    - 市场波动率使用 `detector.market_vol`（复用 Step 2 的 MarketStateDetector）
    - 测试 4 种配置：无过滤（基准 `RiskParityOptimizer`）、阈值 10%、阈值 15%、阈值 20%（后三者使用 `VolFilteredOptimizer`）
    - `Engine.run()` 传入 `rules=make_rules()`
